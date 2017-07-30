@@ -27,29 +27,15 @@ object JsonMacros {
   * The formatter will be placed in the companion object, if it doesn't exist it will be created.
   *
   * {{{
-  * @json case class Person(name: String, age: Int)
-  *
-  * Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
-  * }}}
-  */
-class json extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro JsonFormat.impl
-}
-
-/**
-  * Annotation for case classes to automatically create a [[play.api.libs.json.Format]] for the class.
-  * The formatter will use default values specified in the class fields if they are missing from the JSON value.
-  *
-  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
-  *
-  * {{{
-  * @jsonDefaults case class Person(name: String, age: Int = 5)
+  * @json case class Person(name: String, age: Int = 5)
   *
   * Json.toJson(Person("Olle")) == Json.obj("name" -> "Olle", "age" -> 5)
   * }}}
+  *
+  * When `defaultValues` is set to false then default values of class fields will not be used by the deserializer.
   */
-class jsonDefaults extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro JsonDefaultsFormat.impl
+class json(defaultValues: Boolean = true) extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonMacro.impl
 }
 
 /**
@@ -68,39 +54,31 @@ class jsonInline extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonInlineFormat.impl
 }
 
-object JsonFormat {
+object JsonMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+    val defaultValues: Boolean = c.prefix.tree match {
+      case q"new json(defaultValues = $defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
+      case q"new json($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
+      case q"new json()" => true
+    }
     ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON formatter for case class with no fields")
         case _ =>
-          jsonFormat(c)(className, fields)
+          jsonFormat(c)(defaultValues, className, fields)
       }
     }
   }
 
-  def jsonFormat(c: blackbox.Context)(className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
+  def jsonFormat(c: blackbox.Context)(defaultValues: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
     import c.universe._
-    q"""play.api.libs.json.Json.format[$className]"""
-  }
-}
-
-object JsonDefaultsFormat {
-  def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
-      fields.length match {
-        case 0 =>
-          c.abort(c.enclosingPosition, s"Cannot create JSON formatter with defaults for case class with no fields")
-        case _ =>
-          jsonFormat(c)(className, fields)
-      }
+    if (defaultValues) {
+      q"""play.api.libs.json.Json.using[play.api.libs.json.Json.WithDefaultValues].format[$className]"""
+    } else {
+      q"""play.api.libs.json.Json.format[$className]"""
     }
-  }
-
-  def jsonFormat(c: blackbox.Context)(className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
-    import c.universe._
-    q"""play.api.libs.json.Json.using[play.api.libs.json.Json.WithDefaultValues].format[$className]"""
   }
 }
 
