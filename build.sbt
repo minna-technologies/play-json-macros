@@ -1,6 +1,5 @@
 organization := "tech.minna"
 name := "play-json-macros"
-version := "0.1.0"
 
 scalaVersion := "2.12.3"
 crossScalaVersions := Seq("2.11.8", "2.12.3")
@@ -14,3 +13,11 @@ libraryDependencies ++= Seq(
 )
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+
+// Publishing
+
+bintrayOrganization := Some("minna-technologies")
+bintrayReleaseOnPublish in ThisBuild := true
+
+releaseCrossBuild := true
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
