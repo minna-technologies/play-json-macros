@@ -3,9 +3,7 @@
 This library provides helpful macros for [Play JSON](https://github.com/playframework/play-json).
 
 - `@json` adds a JSON formatter for a case class. 
-- `JsonMacros.unwrapFormat` creates a JSON formatter which "unwraps" the field from a case class with a single field. 
-
-and more.
+- `@jsonUnwrap` and `JsonMacros.unwrapFormat` creates a JSON formatter which "unwraps" the field from a case class with a single field. 
 
 Inspired by [json-annotation](https://github.com/vital-software/json-annotation).
 
