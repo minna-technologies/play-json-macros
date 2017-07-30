@@ -13,12 +13,12 @@ object JsonMacros {
     *
     * {{{
     * case class Person(name: String)
-    * val format = JsonMacros.inlineFormat[Person]
+    * val format = JsonMacros.unwrapFormat[Person]
     *
     * format.writes(Person("Olle")) == JsString("Olle")
     * }}}
     */
-  def inlineFormat[T]: Format[T] = macro JsonInlineFormat.jsonFormatImpl[T]
+  def unwrapFormat[T]: Format[T] = macro JsonUnwrapFormatMacro.jsonFormatImpl[T]
 }
 
 /**
@@ -35,26 +35,28 @@ object JsonMacros {
   * When `defaultValues` is set to false then default values of class fields will not be used by the deserializer.
   */
 class json(defaultValues: Boolean = true) extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro JsonMacro.impl
+  def macroTransform(annottees: Any*): Any = macro JsonFormatMacro.impl
 }
 
 /**
   * Annotation for case classes with a single field to automatically create a [[play.api.libs.json.Format]] for the class.
-  * The serialized/deserialized JSON value will only be the class's field.
+  * The serializer will unwrap the class field from the class and only output the field value as JSON.
+  * The deserializer will wrap the value in the class.
   *
   * The formatter will be placed in the companion object, if it doesn't exist it will be created.
   *
   * {{{
-  * @jsonInline case class Person(name: String)
+  * @jsonUnwrap case class Person(name: String)
   *
   * Json.toJson(Person("Olle")) == JsString("Olle")
+  * JsString("Olle").as[Person] == Person("Olle")
   * }}}
   */
-class jsonInline extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro JsonInlineFormat.impl
+class jsonUnwrap extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonUnwrapFormatMacro.impl
 }
 
-object JsonMacro {
+object JsonFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
     val defaultValues: Boolean = c.prefix.tree match {
@@ -82,7 +84,7 @@ object JsonMacro {
   }
 }
 
-object JsonInlineFormat {
+object JsonUnwrapFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
       fields match {
@@ -138,7 +140,7 @@ object JsonInlineFormat {
           """
         }
       case _ =>
-        c.abort(c.enclosingPosition, s"JsonMacros.inlineFormat is only supported on case classes with a single field, found ${fields.length} fields")
+        c.abort(c.enclosingPosition, s"JsonMacros.unwrapFormat is only supported on case classes with a single field, found ${fields.length} fields")
     }
   }
 }

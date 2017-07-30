@@ -32,44 +32,44 @@ class JsonMacrosSepc extends FlatSpec with Matchers {
     Json.obj("name" -> "Milk").asOpt[Product] shouldEqual None
   }
 
-  "@jsonInline" should "create a JSON formatter for a case class with a single field" in {
-    @jsonInline case class ProductInline(name: String)
-    val product = ProductInline("Milk")
+  "@jsonUnwrap" should "create a JSON formatter for a case class with a single field" in {
+    @jsonUnwrap case class ProductUnwrap(name: String)
+    val product = ProductUnwrap("Milk")
     val expectedJson = JsString("Milk")
     Json.toJson(product) shouldEqual expectedJson
-    expectedJson.asOpt[ProductInline] shouldEqual Some(product)
+    expectedJson.asOpt[ProductUnwrap] shouldEqual Some(product)
   }
 
   it should "create a JSON formatter in a nested structure" in {
-    @jsonInline case class NameNested(text: String)
-    @jsonInline case class ProductInlineNested(name: NameNested)
+    @jsonUnwrap case class NameNested(text: String)
+    @jsonUnwrap case class ProductUnwrapNested(name: NameNested)
 
-    implicit val nameFormat = JsonMacros.inlineFormat[NameNested]
+    implicit val nameFormat = JsonMacros.unwrapFormat[NameNested]
 
-    val product = ProductInlineNested(NameNested("Milk"))
+    val product = ProductUnwrapNested(NameNested("Milk"))
     val expectedJson = JsString("Milk")
     Json.toJson(product) shouldEqual expectedJson
-    expectedJson.asOpt[ProductInlineNested] shouldEqual Some(product)
+    expectedJson.asOpt[ProductUnwrapNested] shouldEqual Some(product)
   }
 
-  "JsonMacros.inlineFormat" should "create a JSON formatter for a case class with a single field" in {
-    case class ProductInline2(name: String)
-    val format = JsonMacros.inlineFormat[ProductInline2]
+  "JsonMacros.unwrapFormat" should "create a JSON formatter for a case class with a single field" in {
+    case class ProductUnwrap(name: String)
+    val format = JsonMacros.unwrapFormat[ProductUnwrap]
 
-    val product = ProductInline2("Milk")
+    val product = ProductUnwrap("Milk")
     val expectedJson = JsString("Milk")
     format.writes(product) shouldEqual expectedJson
     format.reads(expectedJson) shouldEqual JsSuccess(product)
   }
 
   it should "create a JSON formatter in a nested structure" in {
-    case class NameNested2(text: String)
-    case class ProductInlineNested2(name: NameNested2)
+    case class NameNested(text: String)
+    case class ProductUnwrapNested(name: NameNested)
 
-    implicit val nameFormat = JsonMacros.inlineFormat[NameNested2]
-    val format = JsonMacros.inlineFormat[ProductInlineNested2]
+    implicit val nameFormat = JsonMacros.unwrapFormat[NameNested]
+    val format = JsonMacros.unwrapFormat[ProductUnwrapNested]
 
-    val product = ProductInlineNested2(NameNested2("Milk"))
+    val product = ProductUnwrapNested(NameNested("Milk"))
     val expectedJson = JsString("Milk")
     format.writes(product) shouldEqual expectedJson
     format.reads(expectedJson) shouldEqual JsSuccess(product)

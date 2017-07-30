@@ -3,7 +3,7 @@
 This library provides helpful macros for [Play JSON](https://github.com/playframework/play-json).
 
 - `@json` adds a JSON formatter for a case class. 
-- `JsonMacros.inlineFormat` creates a JSON formatter which "inlines" the field from a case class with a single field. 
+- `JsonMacros.unwrapFormat` creates a JSON formatter which "unwraps" the field from a case class with a single field. 
 
 and more.
 
@@ -39,35 +39,32 @@ object Person {
 ### `@json`
 
 ```scala
-@json case class Person(name: String, age: Int)
-
-Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
-```
-
-### `@jsonDefaults`
-
-As `@json` but allows the deserializer to use the default values from the class fields.
-
-```scala
-@jsonDefaults case class Person(name: String, age: Int = 5)
+@json case class Person(name: String, age: Int = 5)
 
 Json.toJson(Person("Olle")) == Json.obj("name" -> "Olle", "age" -> 5)
 ```
 
-### `@jsonInline`
+```scala
+@json(defaultValues = false) case class Person(name: String, age: Int)
 
+Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
+
+Json.obj("name" -> "Olle").asOpt[Person] == None
+```
+
+### `@jsonUnwrap`
 
 ```scala
-@jsonInline case class Person(name: String)
+@jsonUnwrap case class Person(name: String)
 
 Json.toJson(Person("Olle")) == JsString("Olle")
 ```
 
-### `JsonMacros.inlineFormat`
+### `JsonMacros.unwrapFormat`
 
 ```scala
 case class Person(name: String)
-val format = JsonMacros.inlineFormat[Person]
+val format = JsonMacros.unwrapFormat[Person]
 
 format.writes(Person("Olle")) == JsString("Olle")
 ```
