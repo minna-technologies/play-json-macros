@@ -7,10 +7,6 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 
 @jsonDefaults case class ProductDefaults(name: String, price: Double = 10.5)
 
-@jsonInline case class ProductInline(name: String)
-
-case class ProductInline2(name: String)
-
 class JsonMacrosSepc extends FlatSpec with Matchers {
   "@json" should "create a JSON formatter for a case class" in {
     val product = Product("Milk", 9.9)
@@ -35,16 +31,43 @@ class JsonMacrosSepc extends FlatSpec with Matchers {
   }
 
   "@jsonInline" should "create a JSON formatter for a case class with a single field" in {
+    @jsonInline case class ProductInline(name: String)
     val product = ProductInline("Milk")
     val expectedJson = JsString("Milk")
     Json.toJson(product) shouldEqual expectedJson
     expectedJson.asOpt[ProductInline] shouldEqual Some(product)
   }
 
+  it should "create a JSON formatter in a nested structure" in {
+    @jsonInline case class NameNested(text: String)
+    @jsonInline case class ProductInlineNested(name: NameNested)
+
+    implicit val nameFormat = JsonMacros.inlineFormat[NameNested]
+
+    val product = ProductInlineNested(NameNested("Milk"))
+    val expectedJson = JsString("Milk")
+    Json.toJson(product) shouldEqual expectedJson
+    expectedJson.asOpt[ProductInlineNested] shouldEqual Some(product)
+  }
+
   "JsonMacros.inlineFormat" should "create a JSON formatter for a case class with a single field" in {
+    case class ProductInline2(name: String)
     val format = JsonMacros.inlineFormat[ProductInline2]
 
     val product = ProductInline2("Milk")
+    val expectedJson = JsString("Milk")
+    format.writes(product) shouldEqual expectedJson
+    format.reads(expectedJson) shouldEqual JsSuccess(product)
+  }
+
+  it should "create a JSON formatter in a nested structure" in {
+    case class NameNested2(text: String)
+    case class ProductInlineNested2(name: NameNested2)
+
+    implicit val nameFormat = JsonMacros.inlineFormat[NameNested2]
+    val format = JsonMacros.inlineFormat[ProductInlineNested2]
+
+    val product = ProductInlineNested2(NameNested2("Milk"))
     val expectedJson = JsString("Milk")
     format.writes(product) shouldEqual expectedJson
     format.reads(expectedJson) shouldEqual JsSuccess(product)
