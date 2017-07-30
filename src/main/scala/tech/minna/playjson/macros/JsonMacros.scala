@@ -7,17 +7,63 @@ import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
 object JsonMacros {
+  /**
+    * Automatic [[play.api.libs.json.Format]] for case classes with a single field.
+    * The serialized/deserialized JSON value will only be the class's field.
+    *
+    * {{{
+    * case class Person(name: String)
+    * val format = JsonMacros.inlineFormat[Person]
+    *
+    * format.writes(Person("Olle")) == JsString("Olle")
+    * }}}
+    */
   def inlineFormat[T]: Format[T] = macro JsonInlineFormat.jsonFormatImpl[T]
 }
 
+/**
+  * Annotation for case classes to automatically create a [[play.api.libs.json.Format]] for the class.
+  *
+  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
+  *
+  * {{{
+  * @json case class Person(name: String, age: Int)
+  *
+  * Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
+  * }}}
+  */
 class json extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonFormat.impl
 }
 
+/**
+  * Annotation for case classes to automatically create a [[play.api.libs.json.Format]] for the class.
+  * The formatter will use default values specified in the class fields if they are missing from the JSON value.
+  *
+  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
+  *
+  * {{{
+  * @jsonDefaults case class Person(name: String, age: Int = 5)
+  *
+  * Json.toJson(Person("Olle")) == Json.obj("name" -> "Olle", "age" -> 5)
+  * }}}
+  */
 class jsonDefaults extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonDefaultsFormat.impl
 }
 
+/**
+  * Annotation for case classes with a single field to automatically create a [[play.api.libs.json.Format]] for the class.
+  * The serialized/deserialized JSON value will only be the class's field.
+  *
+  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
+  *
+  * {{{
+  * @jsonInline case class Person(name: String)
+  *
+  * Json.toJson(Person("Olle")) == JsString("Olle")
+  * }}}
+  */
 class jsonInline extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonInlineFormat.impl
 }

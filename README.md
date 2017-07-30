@@ -12,15 +12,62 @@ Inspired by [json-annotation](https://github.com/vital-software/json-annotation)
 ## Setup
 
 ```scala
-
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 ```
+
+This library is compiled for both Scala 2.11 and 2.12.
 
 ## Documentation
 
+This library adds a number of annotations for automatically creating JSON formatters. This is how they work:
+
+By using a `@json` (or any of the other annotations) a JSON formatter will automatically be created in the companion object.
+
+This code:
+```scala
+@json case class Person(name: String, age: Int)
+```
+Will be transformed into this: 
+```scala
+case class Person(name: String, age: Int)
+
+object Person {
+  implicit val format = Json.format[Person]
+}
+```
+
 ### `@json`
+
+```scala
+@json case class Person(name: String, age: Int)
+
+Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
+```
 
 ### `@jsonDefaults`
 
+As `@json` but allows the deserializer to use the default values from the class fields.
+
+```scala
+@jsonDefaults case class Person(name: String, age: Int = 5)
+
+Json.toJson(Person("Olle")) == Json.obj("name" -> "Olle", "age" -> 5)
+```
+
 ### `@jsonInline`
 
+
+```scala
+@jsonInline case class Person(name: String)
+
+Json.toJson(Person("Olle")) == JsString("Olle")
+```
+
 ### `JsonMacros.inlineFormat`
+
+```scala
+case class Person(name: String)
+val format = JsonMacros.inlineFormat[Person]
+
+format.writes(Person("Olle")) == JsString("Olle")
+```
