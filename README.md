@@ -19,7 +19,7 @@ This library is compiled for both Scala 2.11 and 2.12.
 
 This library adds a number of annotations for automatically creating JSON formatters. This is how they work:
 
-By using a `@json` (or any of the other annotations) a JSON formatter will automatically be created in the companion object.
+By using `@json` or `@jsonUnwrap` annotations on a case class a JSON formatter will automatically be created in the companion object.
 
 This code:
 ```scala
