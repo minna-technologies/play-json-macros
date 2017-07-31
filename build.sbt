@@ -20,4 +20,5 @@ bintrayOrganization := Some("minna-technologies")
 bintrayReleaseOnPublish in ThisBuild := true
 
 releaseCrossBuild := true
+useGpg := true
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
