@@ -8,7 +8,7 @@ import scala.reflect.macros.blackbox
 
 object JsonMacros {
   /**
-    * Automatic [[play.api.libs.json.Format]] for case classes with a single field.
+    * Automatic `play.api.libs.json.Format` for case classes with a single field.
     * The serialized/deserialized JSON value will only be the class's field.
     *
     * {{{
@@ -22,7 +22,7 @@ object JsonMacros {
 }
 
 /**
-  * Annotation for case classes to automatically create a [[play.api.libs.json.Format]] for the class.
+  * Annotation for case classes to automatically create a `play.api.libs.json.Format` for the class.
   *
   * The formatter will be placed in the companion object, if it doesn't exist it will be created.
   *
@@ -39,7 +39,7 @@ class json(defaultValues: Boolean = true) extends StaticAnnotation {
 }
 
 /**
-  * Annotation for case classes with a single field to automatically create a [[play.api.libs.json.Format]] for the class.
+  * Annotation for case classes with a single field to automatically create a `play.api.libs.json.Format` for the class.
   * The serializer will flatten the class and only output the field value as JSON.
   * The deserializer will wrap the value in the class.
   *
