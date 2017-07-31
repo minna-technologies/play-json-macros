@@ -9,7 +9,12 @@ Inspired by [json-annotation](https://github.com/vital-software/json-annotation)
 
 ## Setup
 
+Add the following to your `build.sbt` file:
 ```scala
+libraryDependencies += "tech.minna" %% "play-json-macros" % "1.0.0"
+resolvers += Resolver.bintrayRepo("minna-technologies", "maven")
+
+// Needed for macro annotations
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 ```
 
