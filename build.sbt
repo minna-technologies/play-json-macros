@@ -9,7 +9,7 @@ scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.6.2" % Provided,
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.3" % Test
 )
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)

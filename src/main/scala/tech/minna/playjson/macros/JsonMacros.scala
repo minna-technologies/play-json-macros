@@ -13,12 +13,12 @@ object JsonMacros {
     *
     * {{{
     * case class Person(name: String)
-    * val format = JsonMacros.unwrapFormat[Person]
+    * val format = JsonMacros.flatFormat[Person]
     *
     * format.writes(Person("Olle")) == JsString("Olle")
     * }}}
     */
-  def unwrapFormat[T]: Format[T] = macro JsonUnwrapFormatMacro.jsonFormatImpl[T]
+  def flatFormat[T]: Format[T] = macro JsonFlatFormatMacro.jsonFormatImpl[T]
 }
 
 /**
@@ -40,20 +40,20 @@ class json(defaultValues: Boolean = true) extends StaticAnnotation {
 
 /**
   * Annotation for case classes with a single field to automatically create a [[play.api.libs.json.Format]] for the class.
-  * The serializer will unwrap the class field from the class and only output the field value as JSON.
+  * The serializer will flatten the class and only output the field value as JSON.
   * The deserializer will wrap the value in the class.
   *
   * The formatter will be placed in the companion object, if it doesn't exist it will be created.
   *
   * {{{
-  * @jsonUnwrap case class Person(name: String)
+  * @jsonFlat case class Person(name: String)
   *
   * Json.toJson(Person("Olle")) == JsString("Olle")
   * JsString("Olle").as[Person] == Person("Olle")
   * }}}
   */
-class jsonUnwrap extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro JsonUnwrapFormatMacro.impl
+class jsonFlat extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonFlatFormatMacro.impl
 }
 
 object JsonFormatMacro {
@@ -84,7 +84,7 @@ object JsonFormatMacro {
   }
 }
 
-object JsonUnwrapFormatMacro {
+object JsonFlatFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
       fields match {
@@ -140,7 +140,7 @@ object JsonUnwrapFormatMacro {
           """
         }
       case _ =>
-        c.abort(c.enclosingPosition, s"JsonMacros.unwrapFormat is only supported on case classes with a single field, found ${fields.length} fields")
+        c.abort(c.enclosingPosition, s"JsonMacros.flatFormat is only supported on case classes with a single field, found ${fields.length} fields")
     }
   }
 }
