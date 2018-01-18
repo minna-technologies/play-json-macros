@@ -2,8 +2,8 @@
 
 This library provides helpful macros for [Play JSON](https://github.com/playframework/play-json).
 
-- `@json` adds a JSON formatter for a case class. 
-- `@jsonFlat` and `JsonMacros.flatFormat` creates a JSON formatter which flattens the case class with a single field to only the field value. 
+- `@json` adds a JSON formatter for a case class.
+- `@jsonFlat` and `JsonMacros.flatFormat` creates a JSON formatter which flattens the case class with a single field to only the field value.
 
 Inspired by [json-annotation](https://github.com/vital-software/json-annotation).
 
@@ -30,7 +30,7 @@ This code:
 ```scala
 @json case class Person(name: String, age: Int)
 ```
-Will be transformed into this: 
+Will be transformed into this:
 ```scala
 case class Person(name: String, age: Int)
 
@@ -44,14 +44,18 @@ object Person {
 ```scala
 @json case class Person(name: String, age: Int = 5)
 
-Json.toJson(Person("Olle")) == Json.obj("name" -> "Olle", "age" -> 5)
+Json.toJson(Person("Olle", 7)) == Json.obj("name" -> "Olle", "age" -> 7)
+
+// Property `age` will be set to the default value
+Json.obj("name" -> "Olle") == Json.toJson(Person("Olle", 5))
 ```
 
 ```scala
 @json(defaultValues = false) case class Person(name: String, age: Int)
 
-Json.toJson(Person("Olle", 5)) == Json.obj("name" -> "Olle", "age" -> 5)
+Json.toJson(Person("Olle", 7)) == Json.obj("name" -> "Olle", "age" -> 7)
 
+// Property `age` is missing
 Json.obj("name" -> "Olle").asOpt[Person] == None
 ```
 
@@ -61,6 +65,7 @@ Json.obj("name" -> "Olle").asOpt[Person] == None
 @jsonFlat case class Person(name: String)
 
 Json.toJson(Person("Olle")) == JsString("Olle")
+JsString("Olle").as[Person] == Person("Olle")
 ```
 
 ### `JsonMacros.flatFormat`
@@ -70,4 +75,5 @@ case class Person(name: String)
 val format = JsonMacros.flatFormat[Person]
 
 format.writes(Person("Olle")) == JsString("Olle")
+format.reads(JsString("Olle")).get == Person("Olle")
 ```
