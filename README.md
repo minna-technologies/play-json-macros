@@ -47,7 +47,7 @@ object Person {
 Json.toJson(Person("Olle", 7)) == Json.obj("name" -> "Olle", "age" -> 7)
 
 // Property `age` will be set to the default value
-Json.obj("name" -> "Olle") == Json.toJson(Person("Olle", 5))
+Json.obj("name" -> "Olle").as[Person] == Person("Olle", 5)
 ```
 
 ```scala
