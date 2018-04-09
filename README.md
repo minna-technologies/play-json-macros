@@ -11,7 +11,7 @@ Inspired by [json-annotation](https://github.com/vital-software/json-annotation)
 
 Add the following to your `build.sbt` file:
 ```scala
-libraryDependencies += "tech.minna" %% "play-json-macros" % "1.0.0"
+libraryDependencies += "tech.minna" %% "play-json-macros" % "1.0.1"
 resolvers += Resolver.bintrayRepo("minna-technologies", "maven")
 
 // Needed for macro annotations
