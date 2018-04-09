@@ -22,7 +22,10 @@ object ExtendCompanionObject {
 
     def extractClassNameAndFields(classDecl: c.universe.ClassDef) = {
       try {
-        val q"case class $className(..$fields) extends ..$bases { ..$body }" = classDecl
+        val q"..${modifiers: Modifiers} class $className(..$fields) extends ..$bases { ..$body }" = classDecl
+
+        if (!modifiers.hasFlag(c.universe.Flag.CASE)) c.abort(c.enclosingPosition, "Expected class to be a case class")
+
         (className, fields)
       } catch {
         case _: MatchError => c.abort(c.enclosingPosition, "Annotation is only supported on case class")
