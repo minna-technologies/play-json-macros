@@ -10,29 +10,13 @@ import play.api.libs.json._
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
 
-/*protected case object FooObject {
-  import play.api.libs.json._
-  implicit val jsonFormat = OFormat[FooObject.type](
-    Reads[FooObject.type] {
-      case JsObject(_) => JsSuccess(FooObject)
-      case _ => JsError("Empty object expected")
-    },
-    OWrites[FooObject.type] { _ =>
-      Json.obj()
-    }
-  )
-}*/
-
-@jsonObject case object FooObject
+sealed trait Animal
+@jsonObject protected case object Bird extends Animal
+@jsonObject case object Mammal extends Animal
+@json case class Bug(numberOfLegs: Int) extends Animal
 
 class JsonMacrosSpec extends FlatSpec with Matchers {
 
-  implicit val sealedFamilyConfiguration = JsonConfiguration(
-    discriminator = "name",
-    typeNaming = JsonNaming { fullName =>
-      fullName.split('.').last
-    }
-  )
   "@json" should "create a JSON formatter for a case class that have default values" in {
     val product = ProductDefaults("Milk", 9.9)
     val expectedJson = Json.obj(
@@ -46,13 +30,24 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
   }
 
   "@jsonObject" should "create a JSON formatter for a case object" in {
-    //FooObject.jsonFormat
-    val expectedJson = Json.obj()
-    Json.toJson(FooObject) shouldEqual expectedJson
-    //expectedJson.asOpt[FooObject.type] shouldEqual Some(FooObject)
+    implicit val sealedFamilyConfiguration = JsonConfiguration(
+      discriminator = "name",
+      typeNaming = JsonNaming { fullName =>
+        fullName.split('.').last
+      }
+    )
 
-    //Json.obj("name" -> "Milk").asOpt[ProductDefaults] shouldEqual Some(ProductDefaults("Milk", price = 10.5))
-    }
+    implicit val animalFormatter = Json.format[Animal]
+
+    val mammalExpectedJson = Json.obj("name" -> "Mammal")
+    Json.toJson(Mammal) shouldEqual mammalExpectedJson
+    mammalExpectedJson.asOpt[Mammal.type] shouldEqual Some(Mammal)
+
+    val bugExpectedJson = Json.obj("name" -> "Bug", "numberOfLegs" -> 6)
+    val sixLegsBug = Bug(numberOfLegs = 6)
+    Json.toJson(sixLegsBug) shouldEqual bugExpectedJson
+    bugExpectedJson.asOpt[Bug] shouldEqual Some(sixLegsBug)
+  }
 
   "@json(defaultValues = false)" should "create a JSON formatter for a case class without default values" in {
     val product = Product("Milk", 9.9)
