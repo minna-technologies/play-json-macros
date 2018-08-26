@@ -7,7 +7,7 @@ crossScalaVersions := Seq("2.11.8", "2.12.4")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.play" %% "play-json" % "2.6.9" % Provided,
+  "com.typesafe.play" %% "play-json" % "2.7.0-M1" % Provided,
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )

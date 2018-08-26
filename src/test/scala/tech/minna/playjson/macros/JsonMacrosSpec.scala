@@ -1,7 +1,7 @@
 package tech.minna.playjson.macros
 
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.{JsString, JsSuccess, Json}
+import play.api.libs.json._
 
 @json case class ProductDefaults(name: String, price: Double = 10.5)
 
@@ -10,7 +10,13 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
 
+sealed trait Animal
+@jsonObject protected case object Bird extends Animal
+@jsonObject case object Mammal extends Animal
+@json case class Bug(numberOfLegs: Int) extends Animal
+
 class JsonMacrosSpec extends FlatSpec with Matchers {
+
   "@json" should "create a JSON formatter for a case class that have default values" in {
     val product = ProductDefaults("Milk", 9.9)
     val expectedJson = Json.obj(
@@ -21,6 +27,26 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
     expectedJson.asOpt[ProductDefaults] shouldEqual Some(product)
 
     Json.obj("name" -> "Milk").asOpt[ProductDefaults] shouldEqual Some(ProductDefaults("Milk", price = 10.5))
+  }
+
+  "@jsonObject" should "create a JSON formatter for a case object" in {
+    implicit val sealedFamilyConfiguration = JsonConfiguration(
+      discriminator = "name",
+      typeNaming = JsonNaming { fullName =>
+        fullName.split('.').last
+      }
+    )
+
+    implicit val animalFormatter = Json.format[Animal]
+
+    val mammalExpectedJson = Json.obj("name" -> "Mammal")
+    Json.toJson(Mammal) shouldEqual mammalExpectedJson
+    mammalExpectedJson.asOpt[Mammal.type] shouldEqual Some(Mammal)
+
+    val bugExpectedJson = Json.obj("name" -> "Bug", "numberOfLegs" -> 6)
+    val sixLegsBug = Bug(numberOfLegs = 6)
+    Json.toJson(sixLegsBug) shouldEqual bugExpectedJson
+    bugExpectedJson.asOpt[Bug] shouldEqual Some(sixLegsBug)
   }
 
   "@json(defaultValues = false)" should "create a JSON formatter for a case class without default values" in {
