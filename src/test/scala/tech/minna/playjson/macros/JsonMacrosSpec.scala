@@ -1,7 +1,7 @@
 package tech.minna.playjson.macros
 
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.{JsString, JsSuccess, Json}
+import play.api.libs.json._
 
 @json case class ProductDefaults(name: String, price: Double = 10.5)
 
@@ -10,7 +10,29 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
 
+/*protected case object FooObject {
+  import play.api.libs.json._
+  implicit val jsonFormat = OFormat[FooObject.type](
+    Reads[FooObject.type] {
+      case JsObject(_) => JsSuccess(FooObject)
+      case _ => JsError("Empty object expected")
+    },
+    OWrites[FooObject.type] { _ =>
+      Json.obj()
+    }
+  )
+}*/
+
+@jsonObject case object FooObject
+
 class JsonMacrosSpec extends FlatSpec with Matchers {
+
+  implicit val sealedFamilyConfiguration = JsonConfiguration(
+    discriminator = "name",
+    typeNaming = JsonNaming { fullName =>
+      fullName.split('.').last
+    }
+  )
   "@json" should "create a JSON formatter for a case class that have default values" in {
     val product = ProductDefaults("Milk", 9.9)
     val expectedJson = Json.obj(
@@ -22,6 +44,15 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
 
     Json.obj("name" -> "Milk").asOpt[ProductDefaults] shouldEqual Some(ProductDefaults("Milk", price = 10.5))
   }
+
+  "@jsonObject" should "create a JSON formatter for a case object" in {
+    //FooObject.jsonFormat
+    val expectedJson = Json.obj()
+    Json.toJson(FooObject) shouldEqual expectedJson
+    //expectedJson.asOpt[FooObject.type] shouldEqual Some(FooObject)
+
+    //Json.obj("name" -> "Milk").asOpt[ProductDefaults] shouldEqual Some(ProductDefaults("Milk", price = 10.5))
+    }
 
   "@json(defaultValues = false)" should "create a JSON formatter for a case class without default values" in {
     val product = Product("Milk", 9.9)

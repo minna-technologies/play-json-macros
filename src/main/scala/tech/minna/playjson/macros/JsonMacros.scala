@@ -38,6 +38,10 @@ class json(defaultValues: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonFormatMacro.impl
 }
 
+class jsonObject extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonObjectFormatMacro.impl
+}
+
 /**
   * Annotation for case classes with a single field to automatically create a `play.api.libs.json.Format` for the class.
   * The serializer will flatten the class and only output the field value as JSON.
@@ -55,6 +59,7 @@ class json(defaultValues: Boolean = true) extends StaticAnnotation {
 class jsonFlat extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonFlatFormatMacro.impl
 }
+
 
 object JsonFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
@@ -141,6 +146,41 @@ object JsonFlatFormatMacro {
         }
       case _ =>
         c.abort(c.enclosingPosition, s"JsonMacros.flatFormat is only supported on case classes with a single field, found ${fields.length} fields")
+    }
+  }
+}
+
+object JsonObjectFormatMacro {
+  def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+    annottees.map(_.tree) match {
+      case (moduleDef: ModuleDef) :: Nil =>
+        val q"${modifiers: Modifiers} object $objectName extends ..$bases { ..$body }" = moduleDef
+        if (!modifiers.hasFlag(c.universe.Flag.CASE)) c.abort(c.enclosingPosition, "Expected object to be a case object")
+
+        val formatDef =
+          q"""
+            import play.api.libs.json._
+            implicit val jsonFormat = OFormat[${objectName}.type](
+              Reads[${objectName}.type] {
+                case JsObject(_) => JsSuccess(${objectName})
+                case _ => JsError("Empty object expected")
+              },
+              OWrites[${objectName}.type] { _ =>
+                Json.obj()
+              }
+            )
+         """
+
+        c.Expr {
+          q"""${modifiers.flags} object $objectName extends ..$bases {
+             ..$body
+             ..$formatDef
+          }"""
+        }
+      case _ => {
+        c.abort(c.enclosingPosition, "Invalid annottee")
+      }
     }
   }
 }
