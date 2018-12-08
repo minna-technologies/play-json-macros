@@ -7,6 +7,10 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 
 @json(defaultValues = false) case class Product(name: String, price: Double)
 
+@json(snakeCase = true) case class ProductCamelCase(productName: String, productPrice: Double)
+
+@json(snakeCase = true) case class ProductCamelCaseWithDefaults(productName: String, productPrice: Double = 10.5)
+
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
 
@@ -33,6 +37,18 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
     expectedJson.asOpt[Product] shouldEqual Some(product)
 
     Json.obj("name" -> "Milk").asOpt[Product] shouldEqual None
+  }
+
+  "@json(snakeCase = true)" should "create a JSON formatter for a case class with snakeCase field name" in {
+    val product = ProductCamelCase("Milk", 9.9)
+    val expectedJson = Json.obj(
+      "product_name" -> "Milk",
+      "product_price" -> 9.9
+    )
+    Json.toJson(product) shouldEqual expectedJson
+    expectedJson.asOpt[ProductCamelCase] shouldEqual Some(product)
+
+    Json.obj("product_name" -> "Milk").asOpt[ProductCamelCaseWithDefaults] shouldEqual Some(ProductCamelCaseWithDefaults("Milk", productPrice = 10.5))
   }
 
   "@jsonFlat" should "create a JSON formatter for a case class with a single field" in {
