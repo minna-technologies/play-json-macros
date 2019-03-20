@@ -15,7 +15,7 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 @json protected final case class ModifiersClass(name: String)
 
 class JsonMacrosSpec extends FlatSpec with Matchers {
-  "@json" should "create a JSON formatter for a case class that have default values" in {
+  "@json" should "create a JSON formatter for a case class that have default values, and include them if given" in {
     val product = ProductDefaults("Milk", 9.9)
     val expectedJson = Json.obj(
       "name" -> "Milk",
@@ -23,8 +23,16 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
     )
     Json.toJson(product) shouldEqual expectedJson
     expectedJson.asOpt[ProductDefaults] shouldEqual Some(product)
+  }
 
-    Json.obj("name" -> "Milk").asOpt[ProductDefaults] shouldEqual Some(ProductDefaults("Milk", price = 10.5))
+  it should "create a JSON formatter for a case class that have default values, and include the defaults if not given" in {
+    val product = ProductDefaults("Milk")
+    val expectedJson = Json.obj(
+      "name" -> "Milk",
+      "price" -> 10.5
+    )
+    Json.toJson(product) shouldEqual expectedJson
+    expectedJson.asOpt[ProductDefaults] shouldEqual Some(product)
   }
 
   "@json(defaultValues = false)" should "create a JSON formatter for a case class without default values" in {
