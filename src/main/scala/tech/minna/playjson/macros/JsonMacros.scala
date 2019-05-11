@@ -56,6 +56,28 @@ class jsonFlat extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonFlatFormatMacro.impl
 }
 
+/**
+  * Annotation for case classes to automatically create a `play.api.libs.json.Writes` for the class.
+  *
+  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
+  *
+  * When `defaultValues` is set to false then default values of class fields will not be used by the deserializer.
+  */
+class jsonWrites() extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonWritesFormatMacro.impl
+}
+
+/**
+  * Annotation for case classes to automatically create a `play.api.libs.json.Reads` for the class.
+  *
+  * The formatter will be placed in the companion object, if it doesn't exist it will be created.
+  *
+  * When `defaultValues` is set to false then default values of class fields will not be used by the deserializer.
+  */
+class jsonReads(defaultValues: Boolean = true) extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro JsonReadsFormatMacro.impl
+}
+
 object JsonFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
@@ -141,6 +163,53 @@ object JsonFlatFormatMacro {
         }
       case _ =>
         c.abort(c.enclosingPosition, s"JsonMacros.flatFormat is only supported on case classes with a single field, found ${fields.length} fields")
+    }
+  }
+}
+
+object JsonWritesFormatMacro {
+  def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+      fields.length match {
+        case 0 =>
+          c.abort(c.enclosingPosition, s"Cannot create JSON writes for case class with no fields")
+        case _ =>
+          jsonWrites(c)(className, fields)
+      }
+    }
+  }
+
+  def jsonWrites(c: blackbox.Context)(className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
+    import c.universe._
+    q"""play.api.libs.json.Json.writes[$className]"""
+  }
+}
+
+object JsonReadsFormatMacro {
+  def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+    val defaultValues: Boolean = c.prefix.tree match {
+      case q"new jsonReads(defaultValues = $defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
+      case q"new jsonReads($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
+      case q"new jsonReads()" => true
+    }
+    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+      fields.length match {
+        case 0 =>
+          c.abort(c.enclosingPosition, s"Cannot create JSON reads for case class with no fields")
+        case _ =>
+          jsonWrites(c)(defaultValues, className, fields)
+      }
+    }
+  }
+
+  def jsonWrites(c: blackbox.Context)(defaultValues: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
+    import c.universe._
+    if (defaultValues) {
+      q"""play.api.libs.json.Json.using[play.api.libs.json.Json.WithDefaultValues].reads[$className]"""
+    } else {
+      q"""play.api.libs.json.Json.reads[$className]"""
     }
   }
 }
