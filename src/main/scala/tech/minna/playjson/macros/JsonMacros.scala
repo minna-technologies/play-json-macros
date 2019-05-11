@@ -169,7 +169,6 @@ object JsonFlatFormatMacro {
 
 object JsonWritesFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
-    import c.universe._
     ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
       fields.length match {
         case 0 =>
@@ -199,12 +198,12 @@ object JsonReadsFormatMacro {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON reads for case class with no fields")
         case _ =>
-          jsonWrites(c)(defaultValues, className, fields)
+          jsonReads(c)(defaultValues, className, fields)
       }
     }
   }
 
-  def jsonWrites(c: blackbox.Context)(defaultValues: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
+  def jsonReads(c: blackbox.Context)(defaultValues: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
     import c.universe._
     if (defaultValues) {
       q"""play.api.libs.json.Json.using[play.api.libs.json.Json.WithDefaultValues].reads[$className]"""
