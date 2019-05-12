@@ -3,13 +3,14 @@ package tech.minna.playjson.macros
 import scala.reflect.macros.blackbox
 
 object ExtendCompanionObject {
-  def impl(c: blackbox.Context)(annottees: Seq[c.Expr[Any]])(formatter: (c.universe.TypeName, List[c.universe.ValDef]) => c.universe.Tree): c.Expr[Any] = {
+  def impl(c: blackbox.Context)(annottees: Seq[c.Expr[Any]])(formatterName: String)(formatter: (c.universe.TypeName, List[c.universe.ValDef]) => c.universe.Tree): c.Expr[Any] = {
     import c.universe._
 
     def modifiedDeclaration(classDecl: ClassDef, compDeclOpt: Option[ModuleDef] = None) = {
       val (className, fields) = extractClassNameAndFields(classDecl)
       val formatTree = formatter(className, fields)
-      val formatField = q"""implicit val jsonFormat = $formatTree"""
+      val formatterNameTerm = TermName(formatterName)
+      val formatField = q"""implicit val $formatterNameTerm = $formatTree"""
       val compDecl = addFormatterToCompanionObject(compDeclOpt, formatField, className)
 
       c.Expr {

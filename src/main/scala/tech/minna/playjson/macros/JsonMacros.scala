@@ -86,7 +86,7 @@ object JsonFormatMacro {
       case q"new json($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
       case q"new json()" => true
     }
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c)(annottees)("jsonFormat") { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON formatter for case class with no fields")
@@ -108,7 +108,7 @@ object JsonFormatMacro {
 
 object JsonFlatFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c)(annottees)("jsonFormat") { (className, fields) =>
       fields match {
         case List(field) =>
           jsonFormat(c)(className, field.tpt, field.name)
@@ -169,7 +169,7 @@ object JsonFlatFormatMacro {
 
 object JsonWritesFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c)(annottees)("jsonWrites") { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON writes for case class with no fields")
@@ -193,7 +193,7 @@ object JsonReadsFormatMacro {
       case q"new jsonReads($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
       case q"new jsonReads()" => true
     }
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c)(annottees)("jsonReads") { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON reads for case class with no fields")
