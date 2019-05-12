@@ -26,6 +26,8 @@ This library adds a number of annotations for automatically creating JSON format
 
 By using `@json` or `@jsonFlat` annotations on a case class a JSON formatter will automatically be created in the companion object.
 
+By using `@jsonReads` or `@jsonWrites` annotations on a case class a JSON reads or JSON writes (respectively) will automatically be created in the companion object, in the same style as if `@json` was used.
+
 This code:
 ```scala
 @json case class Person(name: String, age: Int)
