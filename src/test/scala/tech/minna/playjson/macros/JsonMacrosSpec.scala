@@ -9,7 +9,9 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 
 @jsonWrites case class ProductWrites(name: String, price: Double)
 
-@jsonReads case class ProductReads(name: String, price: Double)
+@jsonReads case class ProductReadsDefaults(name: String, price: Double = 12)
+
+@jsonReads(defaultValues = false) case class ProductReads(name: String, price: Double)
 
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
@@ -109,4 +111,15 @@ class JsonMacrosSpec extends FlatSpec with Matchers {
     "Json.toJson(product)" shouldNot compile
     expectedJson.asOpt[ProductReads] shouldEqual Some(product)
   }
+
+  "@jsonReads(defaultValues=false)" should "create a JSON reads for a case class, but not a JSON writes" in {
+    val product = ProductReadsDefaults("Milk")
+    val expectedJson = Json.obj(
+      "name" -> "Milk",
+      "price" -> 12
+    )
+    "Json.toJson(product)" shouldNot compile
+    expectedJson.asOpt[ProductReadsDefaults] shouldEqual Some(product)
+  }
+
 }
