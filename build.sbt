@@ -20,3 +20,5 @@ bintrayReleaseOnPublish in ThisBuild := true
 releaseCrossBuild := true
 useGpg := true
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
