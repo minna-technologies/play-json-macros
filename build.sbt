@@ -2,7 +2,7 @@ organization := "tech.minna"
 name := "play-json-macros"
 
 scalaVersion := "2.13.0"
-crossScalaVersions := Seq("2.11.8", "2.12.9", "2.13.0")
+crossScalaVersions := Seq("2.12.9", "2.13.0")
 
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-Ymacro-annotations")
 
