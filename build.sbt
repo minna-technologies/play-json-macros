@@ -1,8 +1,8 @@
 organization := "tech.minna"
 name := "play-json-macros"
 
-scalaVersion := "2.13.0"
-crossScalaVersions := Seq("2.12.9", "2.13.0")
+scalaVersion := "2.13.8"
+crossScalaVersions := Seq("2.12.16", "2.13.8")
 
 scalacOptions in ThisBuild ++= {
   val annotationCompilerOptionMaybe = CrossVersion.partialVersion(scalaVersion.value) match {
@@ -20,16 +20,14 @@ libraryDependencies ++= {
   }
 
   Seq(
-    "com.typesafe.play" %% "play-json" % "2.7.4" % Provided,
+    "com.typesafe.play" %% "play-json" % "2.9.2" % Provided,
     "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-    "org.scalatest" %% "scalatest" % "3.0.8" % Test
+    "org.scalatest" %% "scalatest" % "3.2.12" % Test
   ) ++ paradiseCompilerPluginMaybe.toSeq
 }
 
 // Publishing
-
-bintrayOrganization := Some("minna-technologies")
-bintrayReleaseOnPublish in ThisBuild := true
+ThisBuild / publishMavenStyle := true
 
 releaseCrossBuild := true
 useGpg := true
