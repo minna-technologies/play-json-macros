@@ -4,7 +4,7 @@ name := "play-json-macros"
 scalaVersion := "2.13.8"
 crossScalaVersions := Seq("2.12.16", "2.13.8")
 
-scalacOptions in ThisBuild ++= {
+ThisBuild/ scalacOptions ++= {
   val annotationCompilerOptionMaybe = CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, n)) if n >= 13 => Some("-Ymacro-annotations")
     case _ => None
