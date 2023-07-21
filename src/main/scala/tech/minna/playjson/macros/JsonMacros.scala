@@ -34,7 +34,7 @@ object JsonMacros {
   *
   * When `defaultValues` is set to false then default values of class fields will not be used by the deserializer.
   */
-class json(defaultValues: Boolean = true) extends StaticAnnotation {
+class json(defaultValues: Boolean = true, snakeCase: Boolean = false) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JsonFormatMacro.impl
 }
 
@@ -59,25 +59,33 @@ class jsonFlat extends StaticAnnotation {
 object JsonFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
-    val defaultValues: Boolean = c.prefix.tree match {
-      case q"new json(defaultValues = $defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
-      case q"new json($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
-      case q"new json()" => true
+
+    val (defaultValues: Boolean, snakeCase: Boolean) = c.prefix.tree match {
+      case q"new json(defaultValues = $defaultValues, snakeCase = $snakeCase)" => (c.eval[Boolean](c.Expr(defaultValues)), c.eval[Boolean](c.Expr(snakeCase)))
+      case q"new json(defaultValues = $defaultValues)" => (c.eval[Boolean](c.Expr(defaultValues)), false)
+      case q"new json(snakeCase = $snakeCase)" => (true, c.eval[Boolean](c.Expr(snakeCase)))
+      case q"new json($defaultValues)" => (c.eval[Boolean](c.Expr(defaultValues)), false)
+      case q"new json()" => (true, false)
     }
+
     ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON formatter for case class with no fields")
         case _ =>
-          jsonFormat(c)(defaultValues, className, fields)
+          jsonFormat(c)(defaultValues, snakeCase, className, fields)
       }
     }
   }
 
-  def jsonFormat(c: blackbox.Context)(defaultValues: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
+  def jsonFormat(c: blackbox.Context)(defaultValues: Boolean, snakeCase: Boolean, className: c.universe.TypeName, fields: List[c.universe.ValDef]): c.universe.Tree = {
     import c.universe._
-    if (defaultValues) {
+    if (defaultValues && snakeCase) {
+      q"""play.api.libs.json.Json.configured[play.api.libs.json.Json.WithDefaultValues](play.api.libs.json.JsonConfiguration(play.api.libs.json.JsonNaming.SnakeCase)).format[$className]"""
+    } else if (defaultValues && !snakeCase) {
       q"""play.api.libs.json.Json.using[play.api.libs.json.Json.WithDefaultValues].format[$className]"""
+    } else if (!defaultValues && snakeCase) {
+      q"""play.api.libs.json.Json.configured[play.api.libs.json.Json.MacroOptions](play.api.libs.json.JsonConfiguration(play.api.libs.json.JsonNaming.SnakeCase)).format[$className]"""
     } else {
       q"""play.api.libs.json.Json.format[$className]"""
     }
