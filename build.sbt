@@ -34,3 +34,7 @@ useGpg := true
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
+
+ThisBuild / githubOwner := "minna-technologies"
+ThisBuild / githubRepository := "play-json-macros"
+ThisBuild / publishMavenStyle := true
