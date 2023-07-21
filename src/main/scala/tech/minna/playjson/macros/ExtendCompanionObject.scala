@@ -9,7 +9,7 @@ object ExtendCompanionObject {
     def modifiedDeclaration(classDecl: ClassDef, compDeclOpt: Option[ModuleDef] = None) = {
       val (className, fields) = extractClassNameAndFields(classDecl)
       val formatTree = formatter(className, fields)
-      val formatField = q"""implicit val jsonFormat = $formatTree"""
+      val formatField = q"""implicit val jsonFormat: play.api.libs.json.Format[$className] = $formatTree"""
       val compDecl = addFormatterToCompanionObject(compDeclOpt, formatField, className)
 
       c.Expr {
