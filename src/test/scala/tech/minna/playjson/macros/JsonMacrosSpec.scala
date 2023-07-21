@@ -1,6 +1,8 @@
 package tech.minna.playjson.macros
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.{JsString, JsSuccess, Json}
 
 @json case class ProductDefaults(name: String, price: Double = 10.5)
@@ -10,7 +12,7 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 // This case class with modifiers should compile
 @json protected final case class ModifiersClass(name: String)
 
-class JsonMacrosSpec extends FlatSpec with Matchers {
+class JsonMacrosSpec extends AnyFlatSpec with Matchers {
   "@json" should "create a JSON formatter for a case class that have default values" in {
     val product = ProductDefaults("Milk", 9.9)
     val expectedJson = Json.obj(
