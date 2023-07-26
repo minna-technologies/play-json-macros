@@ -64,7 +64,7 @@ object JsonFormatMacro {
       case q"new json($defaultValues)" => c.eval[Boolean](c.Expr(defaultValues))
       case q"new json()" => true
     }
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c, "OFormat")(annottees) { (className, fields) =>
       fields.length match {
         case 0 =>
           c.abort(c.enclosingPosition, s"Cannot create JSON formatter for case class with no fields")
@@ -86,7 +86,7 @@ object JsonFormatMacro {
 
 object JsonFlatFormatMacro {
   def impl(c: blackbox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
-    ExtendCompanionObject.impl(c)(annottees) { (className, fields) =>
+    ExtendCompanionObject.impl(c, "Format")(annottees) { (className, fields) =>
       fields match {
         case List(field) =>
           jsonFormat(c)(className, field.tpt, field.name)
